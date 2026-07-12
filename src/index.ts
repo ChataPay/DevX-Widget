@@ -85,7 +85,6 @@ class FeedbackWidget {
     private selectedEl: Element | null;
     private hoverRafId: number | null;
     private hostId: string;
-    private endPoint: string;
 
     constructor(config: FeedbackWidgetConfig = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -95,7 +94,6 @@ class FeedbackWidget {
         this.selectedSelector = null;
         this.selectedEl = null;
         this.hoverRafId = null;
-        this.endPoint = "https://devx.today/v1/widget/ingest";
 
         this.initialize();
     }
