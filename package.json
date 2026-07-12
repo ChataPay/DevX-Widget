@@ -2,14 +2,15 @@
   "name": "devx-web-widget",
   "version": "1.1.1",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "DevX",
   "license": "ISC",
   "devEngines": {
     "packageManager": {
