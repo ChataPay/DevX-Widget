@@ -27,47 +27,13 @@ pnpm add devx-web-widget
 yarn add devx-web-widget
 ```
 
-**Quick usage — Browser script (drop-in)**
-
-CDN (recommended for quick start):
-
-Include the prebuilt CDN-hosted bundle directly from unpkg:
-
-```html
-<script src="https://app.unpkg.com/devx-web-widget@1.1.0/files/dist/feedback-widget.js"></script>
-<script>
-
-    const DEFAULT_CONFIG = {
-        buttonLabel: 'Feedback',
-        backgroundColor: '#111827',
-        textColor: '#ffffff',
-        accentColor: '#2F6FED',
-        font: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-        position: 'right',
-        widgetType: 'default'
-    };
-
-    const feedbackWidget = new FeedbackWidget("api_key", DEFAULT_CONFIG);
-
-    window.addEventListener('feedbackwidget:submit', (event) => {
-        console.log(event)
-    });
-  </script>
-```
-
-Note: using the CDN is the simplest way to get started; it serves the built `dist/feedback-widget.js` for versioned consumption.
-
-Local bundle (if you need to customize or avoid CDN):
-
-
-**Usage — npm package / ES module (DevX projects)**
+**Usage — npm package / ES module**
 Import the shipped module and instantiate the widget in an ESM environment (recommended for DevX apps):
 
 ```js
 import { FeedbackWidget } from 'devx-web-widget';
 
-// Pass an API key and a config object when appropriate
-const widget = new FeedbackWidget(/* apiKeyOrEmpty */ '', {
+const widget = new FeedbackWidget({
   buttonLabel: 'Feedback',
   accentColor: '#2F6FED',
   position: 'right' // 'left' | 'right'
@@ -76,17 +42,17 @@ const widget = new FeedbackWidget(/* apiKeyOrEmpty */ '', {
 // programmatic control
 widget.open('visible');
 widget.close();
-// widget.destroy();
+widget.destroy();
 
 window.addEventListener('feedbackwidget:submit', (e) => {
   console.log('feedback payload', e.detail);
 });
 ```
 
-Important: do not hard-code sensitive API keys into browser bundles. See the "For DevX users" section below for recommended patterns.
+If you are using the package from a local build, the shipped `dist/` files are already available in the repository.
 
 **Configuration options**
-Pass the config as the second constructor argument (or use `window.FeedbackWidgetConfig` for the browser build):
+Pass the config object directly to the constructor:
 
 - `buttonLabel` (string) — label shown on the side tab (default: `Feedback`)
 - `backgroundColor` (string) — widget background color (hex)
@@ -96,10 +62,13 @@ Pass the config as the second constructor argument (or use `window.FeedbackWidge
 - `position` (`left` | `right`)
 - `widgetType` (`default` | `chatbot`)
 
+The `chatbot` type is available as a widget variant, but it currently renders the same feedback UI as the default type.
 
 **Event payload**
 The widget emits `feedbackwidget:submit` with `event.detail` containing:
 
-- `optionType`: `page_item_visible` | `page_item_hidden`
-- `elementSelector`: CSS selector string or `null`
-- `pageUrl`, `pageTitle`, `title`, `feedback`, `email`, `submittedAt`
+- `title`
+- `body`
+- `user_handle`
+
+The `body` text includes the page title, page URL, selected element selector (when available), option type, and submission timestamp.
