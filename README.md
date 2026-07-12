@@ -6,17 +6,12 @@ A small, dependency-free feedback widget you can drop into any website. It provi
 
 **Features**
 - **Style-isolated**: runs inside a Shadow DOM to avoid style collisions
-**DevX Web Feedback Widget**
-
-A small, dependency-free feedback widget you can drop into any website. It provides a side tab that opens two feedback flows:
-- "Feedback on this page" — pick an element on the page and include a selector in the feedback
-- "Quick feedback" — general feedback (selector hidden)
-
-**Features**
-- **Style-isolated**: runs inside a Shadow DOM to avoid style collisions
 - **Two flows**: element picker and quick feedback
-- **Lightweight**: no runtime dependencies for the browser build
+- **Lightweight**: no runtime dependencies for the module
 - **Event-driven**: emits a `feedbackwidget:submit` event with the payload
+
+**About DevX**
+DevX is a platform for developer experience tooling and integrations — learn more at https://devx.today/. This repository provides the official web feedback widget used by DevX for collecting lightweight feedback from web pages.
 
 **Install (npm / pnpm / yarn)**
 Install the package from the registry (package name from `package.json` is `devx-web-widget`):
@@ -33,22 +28,37 @@ yarn add devx-web-widget
 ```
 
 **Quick usage — Browser script (drop-in)**
-Serve `src/feedback-widget.js` or bundle/publish it to a CDN and include it directly on pages where you want feedback capture.
+
+CDN (recommended for quick start):
+
+Include the prebuilt CDN-hosted bundle directly from unpkg:
 
 ```html
+<script src="https://app.unpkg.com/devx-web-widget@1.1.0/files/dist/feedback-widget.js"></script>
 <script>
-  window.FeedbackWidgetConfig = {
-    endpoint: 'https://your-api.example.com/feedback', // optional: your ingestion endpoint
-    buttonLabel: 'Feedback',                            // optional
-    accentColor: '#2F6FED'                             // optional
-  };
-</script>
-<script src="/path/to/feedback-widget.js"></script>
+
+    const DEFAULT_CONFIG = {
+        buttonLabel: 'Feedback',
+        backgroundColor: '#111827',
+        textColor: '#ffffff',
+        accentColor: '#2F6FED',
+        font: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        position: 'right',
+        widgetType: 'default'
+    };
+
+    const feedbackWidget = new FeedbackWidget("api_key", DEFAULT_CONFIG);
+
+    window.addEventListener('feedbackwidget:submit', (event) => {
+        console.log(event)
+    });
+  </script>
 ```
 
-Notes:
-- The browser build reads `window.FeedbackWidgetConfig`. If `endpoint` is provided, submissions will be POSTed to it.
-- The browser build exposes a minimal global: `window.FeedbackWidget.open()` and `window.FeedbackWidget.close()`.
+Note: using the CDN is the simplest way to get started; it serves the built `dist/feedback-widget.js` for versioned consumption.
+
+Local bundle (if you need to customize or avoid CDN):
+
 
 **Usage — npm package / ES module (DevX projects)**
 Import the shipped module and instantiate the widget in an ESM environment (recommended for DevX apps):
@@ -86,43 +96,6 @@ Pass the config as the second constructor argument (or use `window.FeedbackWidge
 - `position` (`left` | `right`)
 - `widgetType` (`default` | `chatbot`)
 
-**API / endpoint and API Key**
-- Browser build: set `window.FeedbackWidgetConfig.endpoint` to have the widget POST the submitted payload directly to your endpoint.
-- npm/TS class: passing a non-empty API key to `new FeedbackWidget(apiKey, config)` causes the widget to POST a formatted message body to `https://devx.today/v1/widget/ingest` with `Authorization: Bearer <API_KEY>`.
-
-Security recommendations (for DevX teams)
-- Do not embed production API keys in client bundles. Instead use a server-side ingestion proxy:
-  1. Client widget posts to your internal endpoint (no secret in client)
-  2. Your server validates, augments, and forwards to DevX ingestion (`https://devx.today/v1/widget/ingest`) using a server-side-stored API key
-
-Example Node/Express forwarder (DevX pattern):
-
-```js
-// server.js
-import express from 'express';
-import fetch from 'node-fetch';
-
-const app = express();
-app.use(express.json());
-
-app.post('/api/widget-feedback', async (req, res) => {
-  const payload = req.body;
-  // perform validation, rate-limiting, enrich payload as needed
-  await fetch('https://devx.today/v1/widget/ingest', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.DEVX_API_KEY}`
-    },
-    body: JSON.stringify(payload)
-  });
-  res.status(202).end();
-});
-
-app.listen(3000);
-```
-
-Then configure the client/browser widget to use `/api/widget-feedback` as `endpoint`.
 
 **Event payload**
 The widget emits `feedbackwidget:submit` with `event.detail` containing:
@@ -130,37 +103,3 @@ The widget emits `feedbackwidget:submit` with `event.detail` containing:
 - `optionType`: `page_item_visible` | `page_item_hidden`
 - `elementSelector`: CSS selector string or `null`
 - `pageUrl`, `pageTitle`, `title`, `feedback`, `email`, `submittedAt`
-
-**Build & development**
-- Install dependencies (pnpm recommended):
-
-```bash
-pnpm install
-```
-
-- Dev (live watch):
-
-```bash
-pnpm run dev
-```
-
-- Build to `dist`:
-
-```bash
-pnpm run build
-```
-
-**Publishing notes (npm / DevX registry)**
-- Verify `package.json.name` is `devx-web-widget` and update `version`, `license`, and `repository` fields.
-- If publishing to an internal DevX registry, update `.npmrc` with the registry authentication and scope as required.
-
-**Contributing / Extending**
-- To add a configurable `endpoint` to the TypeScript constructor I can implement that change and update tests.
-- Consider adding unit tests for selector generation, and an optional E2E demo page for QA.
-
----
-
-If you'd like, I can implement any of the following now:
-- add `endpoint` to the TypeScript constructor (so consumers can pass a custom endpoint from code),
-- produce a UMD build for CDN consumption,
-- create a small demo HTML page that loads the built file and demonstrates submissions.
