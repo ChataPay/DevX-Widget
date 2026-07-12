@@ -85,10 +85,9 @@ class FeedbackWidget {
     private selectedEl: Element | null;
     private hoverRafId: number | null;
     private hostId: string;
-    private apiKey: string;
     private endPoint: string;
 
-    constructor(apiKey: string | null = null, config: FeedbackWidgetConfig = {}) {
+    constructor(config: FeedbackWidgetConfig = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
         this.hostId = `feedback-widget-host-${Math.random().toString(36).substr(2, 9)}`;
         this.state = 'idle';
@@ -96,7 +95,6 @@ class FeedbackWidget {
         this.selectedSelector = null;
         this.selectedEl = null;
         this.hoverRafId = null;
-        this.apiKey = apiKey || '';
         this.endPoint = "https://devx.today/v1/widget/ingest";
 
         this.initialize();
@@ -794,8 +792,8 @@ class FeedbackWidget {
         const feedbackBody = payload.feedback || '(No additional details provided)';
         const pageTitle = payload.pageTitle;
         const message = `${feedbackBody}\n\nPage: ${pageTitle}\nURL: ${payload.pageUrl}\nSelector: ${payload.elementSelector}\nOption: ${payload.optionType}\nSubmitted: ${payload.submittedAt}`;
-        
-        
+
+
         return {
             title: feedbackTitle,
             body: message,
@@ -804,21 +802,8 @@ class FeedbackWidget {
     }
 
     private submitFeedback(payload: FeedbackPayload): void {
-        window.dispatchEvent(new CustomEvent('feedbackwidget:submit', { detail: payload }));
-
-        if (this.apiKey) {
-            const messageBody = this.prepareMessageBody(payload);
-            fetch(this.endPoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.apiKey}`
-                },
-                body: JSON.stringify(messageBody)
-            }).catch(() => {
-                // Swallow network errors, UX already confirmed below
-            });
-        }
+        const messageBody = this.prepareMessageBody(payload);
+        window.dispatchEvent(new CustomEvent('feedbackwidget:submit', { detail: messageBody }));
 
         this.cancelAll();
         this.showToast('Thanks for the feedback!');
